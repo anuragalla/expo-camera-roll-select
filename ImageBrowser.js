@@ -35,13 +35,30 @@ export default class ImageBrowser extends React.Component {
     this.setState({ selected: newSelected })
   }
 
+  getCameraRollPermission() {
+    const { Permissions } = Expo;
+    return(
+      Permissions.askAsync(Permissions.CAMERA_ROLL)
+        .then(({status}) => {
+          if (status !== 'granted') {
+            throw new Error('Camera Roll permission not granted');
+          }
+        })
+    )
+  }
+
   getPhotos = () => {
     let params = { first: 50, mimeTypes: ['image/jpeg'] };
-    if (this.state.after) params.after = this.state.after
-    if (!this.state.has_next_page) return
-    CameraRoll
-      .getPhotos(params)
-      .then(this.processPhotos)
+    if (this.state.after) params.after = this.state.after;
+    if (!this.state.has_next_page) return;
+    this.getCameraRollPermission().then(
+      CameraRoll
+        .getPhotos(params)
+        .then(this.processPhotos)
+    ).catch(error => {
+      console.log('photo error');
+      console.log(error);
+    })
   }
 
   processPhotos = (r) => {
